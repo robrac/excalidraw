@@ -1,6 +1,7 @@
 import LanguageDetector from "i18next-browser-languagedetector";
 
 export const languages = [
+  { lng: "zh", label: "中", data: require("./locales/zh.json") },
   { lng: "en", label: "English", data: require("./locales/en.json") },
   { lng: "de", label: "Deutsch", data: require("./locales/de.json") },
   { lng: "es", label: "Español", data: require("./locales/es.json") },
