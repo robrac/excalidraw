@@ -121,5 +121,19 @@
         </a>
       </svg>
     </aside>
+    <script>
+      // 向父vue页面发送信息
+      console.log("我是iframe,我发送了了：", document.body.scrollHeight + "px");
+      window.parent.postMessage(
+        {
+          cmd: "returnHeight",
+          params: {
+            success: true,
+            data: document.body.scrollHeight + "px",
+          },
+        },
+        "*",
+      );
+    </script>
   </body>
 </html>

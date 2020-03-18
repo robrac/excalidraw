@@ -82,16 +82,33 @@ export async function saveAsJSON(
   appState: AppState,
 ) {
   const serialized = serializeAsJSON(elements, appState);
-
-  const name = `${appState.name}.json`;
-  await fileSave(
-    new Blob([serialized], { type: "application/json" }),
+  // eslint-disable-next-line no-console
+  console.log("我是iframe,我向iframewin发送了：", {
+    type: "excalidraw",
+    version: 1,
+    source: "http://localhost:3000",
+    elements: elements,
+    appState: appState,
+  });
+  window.parent.postMessage(
     {
-      fileName: name,
-      description: "Excalidraw file",
+      cmd: "returnFormJson",
+      params: {
+        success: true,
+        data: serialized,
+      },
     },
-    (window as any).handle,
+    "*",
   );
+  // const name = `${appState.name}.json`;
+  // await fileSave(
+  //   new Blob([serialized], { type: "application/json" }),
+  //   {
+  //     fileName: name,
+  //     description: "Excalidraw file",
+  //   },
+  //   (window as any).handle,
+  // );
 }
 export async function loadFromJSON() {
   const blob = await fileOpen({
@@ -337,7 +354,7 @@ export async function exportCanvas(
   }
 }
 
-function restore(
+export function restore(
   savedElements: readonly ExcalidrawElement[],
   savedState: AppState | null,
   opts?: { scrollToContent: boolean },

@@ -107,7 +107,7 @@ import { HintViewer } from "./components/HintViewer";
 import useIsMobile, { IsMobileProvider } from "./is-mobile";
 
 import { copyToAppClipboard, getClipboardContent } from "./clipboard";
-import { normalizeScroll } from "./scene/data";
+import { normalizeScroll, restore } from "./scene/data";
 import { getCenter, getDistance } from "./gesture";
 import { menu, palette } from "./components/icons";
 
@@ -740,6 +740,38 @@ export class App extends React.Component<any, AppState> {
     e.preventDefault();
   };
 
+  private postMessageEvent = (e: Event) => {
+    // @ts-ignore
+    const data = e.data;
+    switch (data.cmd) {
+      case "getFormJson":
+        // eslint-disable-next-line no-console
+        console.log("我是iframe,我接受到了：", data);
+        const updateAppState = (contents: string) => {
+          const defaultAppState = getDefaultAppState();
+          let elements = [];
+          let appState = defaultAppState;
+          try {
+            const data = JSON.parse(contents);
+            if (data.type !== "excalidraw") {
+              throw new Error("Cannot load invalid json");
+            }
+            elements = data.elements || [];
+            appState = { ...defaultAppState, ...data.appState };
+          } catch (e) {
+            // Do nothing because elements array is already empty
+          }
+          return { elements, appState };
+        };
+        const { elements, appState } = updateAppState(data.params);
+        if (!elements.length) {
+          return Promise.reject("Cannot load invalid json");
+        }
+        this.syncActionResult(restore(elements, appState));
+        break;
+    }
+  };
+
   private unmounted = false;
   public async componentDidMount() {
     document.addEventListener("copy", this.onCopy);
@@ -754,6 +786,9 @@ export class App extends React.Component<any, AppState> {
     window.addEventListener("blur", this.onUnload, false);
     window.addEventListener("dragover", this.disableEvent, false);
     window.addEventListener("drop", this.disableEvent, false);
+
+    // add iframe message even listener
+    window.addEventListener("message", this.postMessageEvent, false);
 
     const searchParams = new URLSearchParams(window.location.search);
     const id = searchParams.get("id");
